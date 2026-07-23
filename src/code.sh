@@ -16,6 +16,14 @@ set -exo pipefail
 main() {
     echo "=== eggd_msipro-score: ${sample_id} ==="
 
+    # The htslib_suite_asset overlays libhts.so.3 into /usr/local/lib at job start,
+    # but nothing refreshes the dynamic linker cache automatically. Without this,
+    # any *externally supplied* dynamically-linked binary (msisensor-pro is a file
+    # input, not part of the asset bundle) fails with:
+    #   "error while loading shared libraries: libhts.so.3: cannot open shared object file"
+    # even though the library is physically present on disk.
+    ldconfig
+
     dx download "${msisensor_pro}" -o msisensor-pro
     chmod +x msisensor-pro
 

@@ -7,7 +7,7 @@
   "properties": {
     "githubRelease": "1.0.0"
   },
-  "whatsNew": "* v1.0.0 Initial release — renamed/promoted from cgp-msi-score; panel-calibrated 8.0% threshold (100% sensitivity/specificity on 26 labelled EF v1 specimens)",
+  "whatsNew": "* v1.0.0 Initial release — renamed/promoted from cgp-msi-score; panel-calibrated 8.0% threshold (100% sensitivity/specificity on 26 labelled EF v1 specimens). Uses htslib_suite_asset v1.24 (Ubuntu 24.04) plus an explicit ldconfig call after asset extraction, required because the dynamic linker cache is not refreshed automatically for the externally-supplied msisensor-pro binary, which links against the asset's libhts.so.3.",
   "inputSpec": [
     {
       "name": "tumour_bam",
@@ -86,8 +86,8 @@
       {
         "name": "htslib_suite_asset",
         "project": "project-Fkb6Gkj433GVVvj73J7x8KbV",
-        "folder": "/app_assets/htslib/htslib_v1.22.0",
-        "version": "1.22"
+        "folder": "/app_assets/htslib/htslib_v1.24.0",
+        "version": "1.24"
       }
     ]
   },
