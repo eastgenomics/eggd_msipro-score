@@ -41,7 +41,8 @@ dx run eggd_msipro-score \
   -isample_id="S0110" \
   -ibaseline_tar=file-wwww \
   -imsisensor_pro=file-vvvv \
-  --instance-type mem1_ssd1_v2_x2
+  --instance-type mem1_ssd1_v2_x2 \
+  --priority high
 ```
 
 ## Panel-specific threshold calibration

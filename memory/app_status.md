@@ -17,7 +17,8 @@ against a configurable threshold (default 8.0%).
 `-b` is `pro`'s thread count (`dGetProOptions`, `cpp/distribution.cpp:446` at msisensor-pro
 v1.3.0), and the sites file's threshold column is `-1`, so every locus was scored against the
 generic `-i` cut-off (0.1) and the baseline was never read. Confirmed by A/B on 24302S0067:
-app command 5.50%, baseline as `-d` 1.56%. The 8.0% threshold below was calibrated on
+app command 5.50%, baseline as `-d` 1.56% (on the DI-4114 non-UMI re-run BAM — a different
+BAM from the v1.0.0 smoke test below, hence 5.50% vs 5.36% for the same sample). The 8.0% threshold below was calibrated on
 v1.0.0-style scores and must be re-derived. The `msi_sites` input was removed in v1.1.0.
 
 This is the **only stage of the pipeline that runs repeatedly in production** — once per new

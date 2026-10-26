@@ -45,7 +45,7 @@ main() {
 
     # A file without trained thresholds (e.g. a scan/sites file, all -1) would
     # run without error but score every locus against the generic cut-off.
-    awk -F'\t' 'NR==1 { if ($8 != "threshold") exit 1; next } $8 ~ /^[0-9.eE+-]+$/ && $8 >= 0 { found = 1; exit } END { exit !found }' \
+    awk -F'\t' 'NR==1 { if ($8 != "threshold") exit 1; next } $8 ~ /^[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$/ { found = 1; exit } END { exit !found }' \
         "${BASELINE_FILE}" \
         || { echo "ERROR: ${BASELINE_FILE} has no per-locus thresholds in column 8 - not a msisensor-pro baseline"; exit 1; }
 
