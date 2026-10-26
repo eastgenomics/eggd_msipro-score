@@ -1,13 +1,13 @@
 {
   "name": "eggd_msipro-score",
   "title": "eggd_msipro-score",
-  "summary": "MSIsensor-pro tumour-only scoring against a panel-specific MSS baseline; applies the panel-calibrated 8.0% MSI-H threshold",
+  "summary": "MSIsensor-pro tumour-only scoring against a panel-specific MSS baseline; default 8.0% MSI-H threshold pending recalibration for v1.1.0",
   "dxapi": "1.0.0",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "properties": {
-    "githubRelease": "1.0.0"
+    "githubRelease": "1.1.0"
   },
-  "whatsNew": "* v1.0.0 Initial release — renamed/promoted from cgp-msi-score; panel-calibrated 8.0% threshold (100% sensitivity/specificity on 26 labelled EF v1 specimens). Uses htslib_suite_asset v1.24 (Ubuntu 24.04) plus an explicit ldconfig call after asset extraction, required because the dynamic linker cache is not refreshed automatically for the externally-supplied msisensor-pro binary, which links against the asset's libhts.so.3.",
+  "whatsNew": "* v1.1.0 Fix: the baseline is now passed to msisensor-pro pro via -d. v1.0.0 passed it via -b, which pro reads as its thread count, so the baseline was never used and every locus was scored against the generic 0.1 cut-off; scores from v1.0.0 are not baseline-calibrated and are not comparable with v1.1.0. Removed the msi_sites input, which the app no longer needs (the baseline carries the sites). New optional input min_coverage (msisensor-pro -c, default 20, previously hardcoded). pro now runs with -b set to the instance's CPU count (nproc). The 8.0% default threshold was calibrated on v1.0.0 scores and must be re-derived before clinical use.\n* v1.0.0 Initial release — renamed/promoted from cgp-msi-score; panel-calibrated 8.0% threshold (100% sensitivity/specificity on 26 labelled EF v1 specimens). Uses htslib_suite_asset v1.24 (Ubuntu 24.04) plus an explicit ldconfig call after asset extraction, required because the dynamic linker cache is not refreshed automatically for the externally-supplied msisensor-pro binary, which links against the asset's libhts.so.3.",
   "inputSpec": [
     {
       "name": "tumour_bam",
@@ -33,20 +33,12 @@
       "help": "Sample identifier used to name the output TSV"
     },
     {
-      "name": "msi_sites",
-      "label": "Panel MSI site list",
-      "class": "file",
-      "optional": false,
-      "patterns": ["*.txt"],
-      "help": "cgp_msi_sites.txt output from eggd_msipro-baseline"
-    },
-    {
       "name": "baseline_tar",
       "label": "MSS baseline bundle",
       "class": "file",
       "optional": false,
       "patterns": ["*.tar.gz"],
-      "help": "cgp_msi_baseline.tar.gz output from eggd_msipro-baseline"
+      "help": "cgp_msi_baseline.tar.gz output from eggd_msipro-baseline. Contents are not validated; a sites file (threshold -1) packaged as the baseline falls back to the generic -i 0.1 cut-off"
     },
     {
       "name": "msisensor_pro",
@@ -62,6 +54,14 @@
       "optional": true,
       "default": 8.0,
       "help": "Panel-calibrated unstable-site percentage cut-off for MSI-H (default 8.0%; NOT the generic msisensor-pro 20% default — see README for calibration)"
+    },
+    {
+      "name": "min_coverage",
+      "label": "Minimum locus coverage",
+      "class": "int",
+      "optional": true,
+      "default": 20,
+      "help": "msisensor-pro pro -c: minimum read coverage for a locus to be evaluated (default 20, as used in v1.0.0; msisensor-pro's own default is 15)"
     }
   ],
   "outputSpec": [
@@ -70,7 +70,7 @@
       "label": "MSI score TSV",
       "class": "file",
       "patterns": ["*.msi.tsv"],
-      "help": "<sample_id>.msi.tsv — sample_id, msi_score, total_sites, unstable_sites, msi_status, tool_version"
+      "help": "<sample_id>.msi.tsv — sample_id, msi_score, total_sites, unstable_sites, msi_status, threshold, tool_version"
     }
   ],
   "runSpec": {

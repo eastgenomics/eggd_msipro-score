@@ -4,12 +4,19 @@
 #
 # Per-sample MSI scoring app — the only stage of the pipeline that runs
 # repeatedly in production. Runs msisensor-pro pro with a pre-built
-# panel-specific MSS baseline (from eggd_msipro-baseline) supplied via -b,
-# which performs a likelihood-ratio test at each panel locus against the MSS
-# background instead of just extracting raw distributions. The resulting
-# unstable-site percentage is then classified against a panel-calibrated
-# threshold (default 8.0% — NOT msisensor-pro's generic 20% default, which is
-# tuned for tumour-normal WGS/WES, not a tumour-only targeted panel).
+# panel-specific MSS baseline (from eggd_msipro-baseline) supplied via -d.
+# pro reads each locus's instability threshold from column 8 of the -d file;
+# the baseline carries per-locus thresholds trained on MSS samples, whereas a
+# scan/sites file carries -1, which pro replaces with the generic -i cut-off
+# (0.1). -b is pro's thread count, not a baseline (v1.0.0 passed the baseline
+# there, so it was silently ignored); it is now set to the instance's CPU count.
+# -c (minimum locus coverage) comes from the min_coverage input.
+#
+# The resulting unstable-site percentage is then classified against a
+# panel-calibrated threshold (default 8.0% — NOT msisensor-pro's generic 20%
+# default, which is tuned for tumour-normal WGS/WES, not a tumour-only targeted
+# panel). The 8.0% default was calibrated on v1.0.0 scores and must be
+# re-derived for v1.1.0.
 
 set -exo pipefail
 
@@ -30,24 +37,28 @@ main() {
     echo "[1/3] Downloading inputs..."
     dx download "${tumour_bam}"   -o tumour.bam
     dx download "${tumour_bai}"   -o tumour.bam.bai
-    dx download "${msi_sites}"    -o msi_sites.txt
     dx download "${baseline_tar}" -o baseline.tar.gz
     tar --no-same-owner -xzf baseline.tar.gz
 
+    # Content is intentionally not validated: a sites file (thresholds -1) may be
+    # supplied here to score against the generic -i cut-off. See README.
     BASELINE_FILE="baseline_out/cgp_msi_baseline"
     [[ -f "${BASELINE_FILE}" ]] \
         || { echo "ERROR: baseline file not found after extract"; ls -lR baseline_out/ 2>/dev/null || ls; exit 1; }
 
     THRESHOLD="${msi_threshold:-8.0}"
+    MIN_COVERAGE="${min_coverage:-20}"
+    # pro parallelises per-window locus scanning with OpenMP across -b threads
+    THREADS=$(nproc)
 
-    echo "[2/3] Running msisensor-pro pro with baseline (threshold ${THRESHOLD}%)..."
+    echo "[2/3] Running msisensor-pro pro with baseline (threshold ${THRESHOLD}%, min coverage ${MIN_COVERAGE}x, ${THREADS} threads)..."
     mkdir -p output/
     ./msisensor-pro pro \
-        -d msi_sites.txt \
+        -d "${BASELINE_FILE}" \
         -t tumour.bam \
         -o "output/${sample_id}" \
-        -b "${BASELINE_FILE}" \
-        -c 20
+        -c "${MIN_COVERAGE}" \
+        -b "${THREADS}"
 
     SCORE_FILE="output/${sample_id}"
     [[ -s "${SCORE_FILE}" ]] || { echo "ERROR: score file missing"; ls output/; exit 1; }
