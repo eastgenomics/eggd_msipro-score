@@ -39,6 +39,8 @@ main() {
     dx download "${baseline_tar}" -o baseline.tar.gz
     tar --no-same-owner -xzf baseline.tar.gz
 
+    # Content is intentionally not validated: a sites file (thresholds -1) may be
+    # supplied here to score against the generic -i cut-off. See README.
     BASELINE_FILE="baseline_out/cgp_msi_baseline"
     [[ -f "${BASELINE_FILE}" ]] \
         || { echo "ERROR: baseline file not found after extract"; ls -lR baseline_out/ 2>/dev/null || ls; exit 1; }

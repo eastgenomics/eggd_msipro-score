@@ -38,7 +38,7 @@
       "class": "file",
       "optional": false,
       "patterns": ["*.tar.gz"],
-      "help": "cgp_msi_baseline.tar.gz output from eggd_msipro-baseline"
+      "help": "cgp_msi_baseline.tar.gz output from eggd_msipro-baseline. Contents are not validated; a sites file (threshold -1) packaged as the baseline falls back to the generic -i 0.1 cut-off"
     },
     {
       "name": "msisensor_pro",
