@@ -9,7 +9,8 @@
 # the baseline carries per-locus thresholds trained on MSS samples, whereas a
 # scan/sites file carries -1, which pro replaces with the generic -i cut-off
 # (0.1). -b is pro's thread count, not a baseline (v1.0.0 passed the baseline
-# there, so it was silently ignored).
+# there, so it was silently ignored); it is now set to the instance's CPU count.
+# -c (minimum locus coverage) comes from the min_coverage input.
 #
 # The resulting unstable-site percentage is then classified against a
 # panel-calibrated threshold (default 8.0% — NOT msisensor-pro's generic 20%
@@ -46,14 +47,18 @@ main() {
         || { echo "ERROR: baseline file not found after extract"; ls -lR baseline_out/ 2>/dev/null || ls; exit 1; }
 
     THRESHOLD="${msi_threshold:-8.0}"
+    MIN_COVERAGE="${min_coverage:-20}"
+    # pro parallelises per-window locus scanning with OpenMP across -b threads
+    THREADS=$(nproc)
 
-    echo "[2/3] Running msisensor-pro pro with baseline (threshold ${THRESHOLD}%)..."
+    echo "[2/3] Running msisensor-pro pro with baseline (threshold ${THRESHOLD}%, min coverage ${MIN_COVERAGE}x, ${THREADS} threads)..."
     mkdir -p output/
     ./msisensor-pro pro \
         -d "${BASELINE_FILE}" \
         -t tumour.bam \
         -o "output/${sample_id}" \
-        -c 20
+        -c "${MIN_COVERAGE}" \
+        -b "${THREADS}"
 
     SCORE_FILE="output/${sample_id}"
     [[ -s "${SCORE_FILE}" ]] || { echo "ERROR: score file missing"; ls output/; exit 1; }

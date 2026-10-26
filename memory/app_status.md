@@ -8,7 +8,7 @@ type: project
 
 ## What it is
 DNAnexus app that scores a single tumour-only CGP-panel BAM for microsatellite instability
-(MSI) status. Runs `msisensor-pro pro -d <baseline> -c 20` against a pre-built panel-specific
+(MSI) status. Runs `msisensor-pro pro -d <baseline> -c <min_coverage, default 20> -b $(nproc)` against a pre-built panel-specific
 MSS baseline (from companion app `eggd_msipro-baseline`, separate repo); `pro` reads per-locus
 thresholds from column 8 of the `-d` file. Classifies the resulting unstable-site percentage
 against a configurable threshold (default 8.0%).
@@ -68,6 +68,8 @@ resolves the issue.
 
 ## Design decisions
 - Made threshold configurable (`msi_threshold`, default 8.0) rather than hardcoded.
+- v1.1.0: minimum locus coverage configurable (`min_coverage`, default 20, was hardcoded `-c 20`);
+  threads set to `nproc` via `-b` (pro uses OpenMP in `Window::ScanReads`).
 - Replaced `bc` (used by the prototype for the floating-point threshold comparison) with
   `awk`, removing a runtime dependency that would otherwise need an `execDepends` entry.
 - `msisensor_pro` supplied as plain `file` input, not `assetDepends`, since it's a
