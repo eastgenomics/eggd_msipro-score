@@ -9,10 +9,13 @@
 # the baseline carries per-locus thresholds trained on MSS samples, whereas a
 # scan/sites file carries -1, which pro replaces with the generic -i cut-off
 # (0.1). -b is pro's thread count, not a baseline (v1.0.0 passed the baseline
-# there, so it was silently ignored). The resulting
-# unstable-site percentage is then classified against a panel-calibrated
-# threshold (default 8.0% — NOT msisensor-pro's generic 20% default, which is
-# tuned for tumour-normal WGS/WES, not a tumour-only targeted panel).
+# there, so it was silently ignored).
+#
+# The resulting unstable-site percentage is then classified against a
+# panel-calibrated threshold (default 8.0% — NOT msisensor-pro's generic 20%
+# default, which is tuned for tumour-normal WGS/WES, not a tumour-only targeted
+# panel). The 8.0% default was calibrated on v1.0.0 scores and must be
+# re-derived for v1.1.0.
 
 set -exo pipefail
 
@@ -42,7 +45,7 @@ main() {
 
     # A file without trained thresholds (e.g. a scan/sites file, all -1) would
     # run without error but score every locus against the generic cut-off.
-    awk -F'\t' 'NR==1 { if ($8 != "threshold") exit 1; next } $8 >= 0 { found = 1; exit } END { exit !found }' \
+    awk -F'\t' 'NR==1 { if ($8 != "threshold") exit 1; next } $8 ~ /^[0-9.eE+-]+$/ && $8 >= 0 { found = 1; exit } END { exit !found }' \
         "${BASELINE_FILE}" \
         || { echo "ERROR: ${BASELINE_FILE} has no per-locus thresholds in column 8 - not a msisensor-pro baseline"; exit 1; }
 

@@ -22,7 +22,8 @@ v1.0.0-style scores and must be re-derived. The `msi_sites` input was removed in
 
 This is the **only stage of the pipeline that runs repeatedly in production** — once per new
 tumour sample. Renamed/promoted from a prototype applet `cgp-msi-score`, validated on a
-48-sample cohort; underlying command and 8.0% threshold logic unchanged from that validation.
+48-sample cohort; v1.0.0 kept the prototype's command and 8.0% threshold logic unchanged
+from that validation. v1.1.0 changes the command (baseline via `-d`), see above.
 
 ## Panel-specific threshold
 8.0% (not msisensor-pro's generic 20% default, tuned for tumour-normal WGS/WES). Calibrated
@@ -32,10 +33,10 @@ cohort: highest confirmed MSS score 6.47%, lowest confirmed MSI-H score 9.09%, g
 refer for IHC. Exposed as optional input `msi_threshold`, not hardcoded.
 
 ## Build/publish status
-- v1.0.0 published (current, first release): `app-J9V2Bzj4pq4GX6xjP1XVB9y6`
+- v1.1.0 (baseline via `-d`, `msi_sites` input removed): in review, not yet built or published.
+- v1.0.0 published (first release, does not use the baseline): `app-J9V2Bzj4pq4GX6xjP1XVB9y6`
 - Built as **app** not applet: `dx build --app --bill-to org-emee_1`, `dx publish`.
-- Commit tested/published: `d5c1862` (includes the ldconfig fix) — identical to published
-  app, no subsequent changes.
+- v1.0.0 commit tested/published: `d5c1862` (includes the ldconfig fix).
 
 ## Dependency fix: libhts.so.3
 Same root cause and fix as companion app `eggd_msipro-baseline` (see that repo's memory for
@@ -48,7 +49,7 @@ Fixed by (1) retargeting to new `htslib_suite_asset` v1.24 (Ubuntu 24.04,
 (2) adding an explicit `ldconfig` call at the start of `main()` — fix (2) is what actually
 resolves the issue.
 
-## Testing performed
+## Testing performed (v1.0.0 only — not valid for v1.1.0)
 - **Single-sample smoke test** (PASS): real live BAM, sample `24302S0067` (not part of
   confirmed cohort, used only to prove app mechanics). Result: 13,470 sites, 5.36% score,
   722 unstable sites, MSS call — consistent with the cohort's MSS score range (5.0–7.1%).
