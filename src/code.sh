@@ -4,9 +4,12 @@
 #
 # Per-sample MSI scoring app — the only stage of the pipeline that runs
 # repeatedly in production. Runs msisensor-pro pro with a pre-built
-# panel-specific MSS baseline (from eggd_msipro-baseline) supplied via -b,
-# which performs a likelihood-ratio test at each panel locus against the MSS
-# background instead of just extracting raw distributions. The resulting
+# panel-specific MSS baseline (from eggd_msipro-baseline) supplied via -d.
+# pro reads each locus's instability threshold from column 8 of the -d file;
+# the baseline carries per-locus thresholds trained on MSS samples, whereas a
+# scan/sites file carries -1, which pro replaces with the generic -i cut-off
+# (0.1). -b is pro's thread count, not a baseline (v1.0.0 passed the baseline
+# there, so it was silently ignored). The resulting
 # unstable-site percentage is then classified against a panel-calibrated
 # threshold (default 8.0% — NOT msisensor-pro's generic 20% default, which is
 # tuned for tumour-normal WGS/WES, not a tumour-only targeted panel).
@@ -30,7 +33,6 @@ main() {
     echo "[1/3] Downloading inputs..."
     dx download "${tumour_bam}"   -o tumour.bam
     dx download "${tumour_bai}"   -o tumour.bam.bai
-    dx download "${msi_sites}"    -o msi_sites.txt
     dx download "${baseline_tar}" -o baseline.tar.gz
     tar --no-same-owner -xzf baseline.tar.gz
 
@@ -38,15 +40,20 @@ main() {
     [[ -f "${BASELINE_FILE}" ]] \
         || { echo "ERROR: baseline file not found after extract"; ls -lR baseline_out/ 2>/dev/null || ls; exit 1; }
 
+    # A file without trained thresholds (e.g. a scan/sites file, all -1) would
+    # run without error but score every locus against the generic cut-off.
+    awk -F'\t' 'NR==1 { if ($8 != "threshold") exit 1; next } $8 >= 0 { found = 1; exit } END { exit !found }' \
+        "${BASELINE_FILE}" \
+        || { echo "ERROR: ${BASELINE_FILE} has no per-locus thresholds in column 8 - not a msisensor-pro baseline"; exit 1; }
+
     THRESHOLD="${msi_threshold:-8.0}"
 
     echo "[2/3] Running msisensor-pro pro with baseline (threshold ${THRESHOLD}%)..."
     mkdir -p output/
     ./msisensor-pro pro \
-        -d msi_sites.txt \
+        -d "${BASELINE_FILE}" \
         -t tumour.bam \
         -o "output/${sample_id}" \
-        -b "${BASELINE_FILE}" \
         -c 20
 
     SCORE_FILE="output/${sample_id}"

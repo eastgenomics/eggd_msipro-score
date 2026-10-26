@@ -8,11 +8,17 @@ type: project
 
 ## What it is
 DNAnexus app that scores a single tumour-only CGP-panel BAM for microsatellite instability
-(MSI) status. Runs `msisensor-pro pro -b <baseline> -c 20` against a pre-built panel-specific
-MSS baseline (from companion app `eggd_msipro-baseline`, separate repo), which makes `pro`
-perform a likelihood-ratio test at each panel locus rather than just extracting raw
-repeat-length distributions. Classifies the resulting unstable-site percentage against a
-configurable threshold (default 8.0%).
+(MSI) status. Runs `msisensor-pro pro -d <baseline> -c 20` against a pre-built panel-specific
+MSS baseline (from companion app `eggd_msipro-baseline`, separate repo); `pro` reads per-locus
+thresholds from column 8 of the `-d` file. Classifies the resulting unstable-site percentage
+against a configurable threshold (default 8.0%).
+
+**v1.0.0 defect (fixed in v1.1.0, 2026-10-26):** v1.0.0 ran `pro -d <sites> -b <baseline>`.
+`-b` is `pro`'s thread count (`dGetProOptions`, `cpp/distribution.cpp:446` at msisensor-pro
+v1.3.0), and the sites file's threshold column is `-1`, so every locus was scored against the
+generic `-i` cut-off (0.1) and the baseline was never read. Confirmed by A/B on 24302S0067:
+app command 5.50%, baseline as `-d` 1.56%. The 8.0% threshold below was calibrated on
+v1.0.0-style scores and must be re-derived. The `msi_sites` input was removed in v1.1.0.
 
 This is the **only stage of the pipeline that runs repeatedly in production** — once per new
 tumour sample. Renamed/promoted from a prototype applet `cgp-msi-score`, validated on a
