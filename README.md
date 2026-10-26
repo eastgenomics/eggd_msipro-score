@@ -5,7 +5,7 @@
 
 Scores a single tumour-only CGP-panel BAM for microsatellite instability (MSI) status using `msisensor-pro pro` with a pre-built panel-specific MSS baseline supplied via `-d`. `pro` reads each locus's instability threshold from column 8 of the `-d` file: the baseline carries per-locus thresholds trained on MSS samples, so each locus is judged against the MSS background rather than a single generic cut-off — the output is a single unstable-site percentage, which is then classified against a configurable threshold.
 
-The app checks that the baseline has per-locus thresholds and fails otherwise. A scan/sites file carries `-1` in that column, which `pro` silently replaces with its generic `-i` cut-off (0.1).
+The file in the tarball is not checked. A scan/sites file packaged as the baseline carries `-1` in the threshold column, which `pro` replaces with its generic `-i` cut-off (0.1) — i.e. scoring without a baseline, as v1.0.0 did.
 
 > **v1.0.0 did not use the baseline.** It passed the scan file as `-d` and the baseline as `-b`, which `pro` reads as its thread count. Every v1.0.0 score was therefore computed against the generic 0.1 cut-off at every locus, regardless of which baseline was supplied. Scores from v1.0.0 and v1.1.0 are not comparable.
 
